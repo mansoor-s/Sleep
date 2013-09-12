@@ -1,6 +1,7 @@
 package Sleep
 
 import (
+	"fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"reflect"
@@ -73,19 +74,21 @@ func (q *Query) Sort(fields ...string) *Query {
 }
 
 func (query *Query) Exec(result interface{}) error {
-	typ := reflect.TypeOf(result)
+	typ := reflect.TypeOf(result).Elem()
 	var structName string
 	isSlice := false
-
+	fmt.Println("kind: ", typ.Kind())
 	if typ.Kind() == reflect.Slice {
-		structName = typ.Elem().Name()
+		structName = typ.Elem().Elem().Name()
 		isSlice = true
 	} else {
-		structName = typ.Elem().Name()
+		structName = typ.Name()
 	}
+	fmt.Println("Model name: ", structName)
 
 	model := query.z.models[structName]
-
+	fmt.Println("Model:")
+	fmt.Println(model)
 	q := model.C.Find(query.query)
 
 	if query.limit != 0 {
@@ -115,13 +118,13 @@ func (query *Query) Exec(result interface{}) error {
 			return err
 		}
 
-		val := reflect.ValueOf(result)
+		val := reflect.ValueOf(result).Elem()
 		elemCount := val.Len()
 		for i := 0; i < elemCount; i++ {
 			modelCpy := query.z.models[structName]
 			sliceElem := val.Index(i)
 			modelCpy.doc = sliceElem.Interface()
-			modelElem := sliceElem.Elem().FieldByName("Sleep.Model")
+			modelElem := sliceElem.Elem().FieldByName("Model")
 			modelElem.Set(reflect.ValueOf(model))
 		}
 		return err
