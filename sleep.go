@@ -1,7 +1,6 @@
 package Sleep
 
 import (
-	"fmt"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"reflect"
@@ -77,18 +76,14 @@ func (query *Query) Exec(result interface{}) error {
 	typ := reflect.TypeOf(result).Elem()
 	var structName string
 	isSlice := false
-	fmt.Println("kind: ", typ.Kind())
 	if typ.Kind() == reflect.Slice {
 		structName = typ.Elem().Elem().Name()
 		isSlice = true
 	} else {
 		structName = typ.Name()
 	}
-	fmt.Println("Model name: ", structName)
 
 	model := query.z.models[structName]
-	fmt.Println("Model:")
-	fmt.Println(model)
 	q := model.C.Find(query.query)
 
 	if query.limit != 0 {
