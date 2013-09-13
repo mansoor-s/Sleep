@@ -14,8 +14,9 @@ type M bson.M
 type D bson.D
 
 type Sleep struct {
-	Db     *mgo.Database
-	models map[string]Model
+	Db     		*mgo.Database
+	models 		map[string]Model
+	modelTag 	string
 }
 
 func New(session *mgo.Session, dbName string) *Sleep {
@@ -24,11 +25,17 @@ func New(session *mgo.Session, dbName string) *Sleep {
 	return sleep
 }
 
+func (z *Sleep) SetModelTag(key string) {
+	z.modelTag = key
+}
+
+
 func (z *Sleep) Register(schema interface{}, collectionName string) {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	z.models[structName] = Model{C: z.Db.C(collectionName), isQueried: true}
+	z.models[structName] = Model{C: z.Db.C(collectionName), 
+		isQueried: true, schema: schema}
 }
 
 func (z *Sleep) Find(query interface{}) *Query {
@@ -62,4 +69,11 @@ func (z *Sleep) Create(doc interface{}) {
 	idField := reflect.ValueOf(doc).Elem().FieldByName("Id")
 	id := bson.NewObjectId()
 	idField.Set(reflect.ValueOf(id))
+}
+
+
+func (z *Sleep) C(model string) (*mgo.Collection, bool) {
+	model, ok := z.models[model]
+	c := model.C
+	return c, ok
 }

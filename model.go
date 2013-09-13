@@ -6,10 +6,11 @@ import (
 )
 
 type Model struct {
-	C         *mgo.Collection
-	doc       interface{}
-	isQueried bool
-	populated map[string]interface{}
+	C         	*mgo.Collection
+	doc       	interface{}
+	isQueried 	bool
+	populated 	map[string]interface{}
+	schema 			interface{}
 }
 
 func (m *Model) Save() error {

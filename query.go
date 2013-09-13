@@ -17,7 +17,18 @@ type Query struct {
 	z         *Sleep
 	populated map[string]interface{}
 	isPopOp   bool
+	parentStruct intrface{}
+	populateField interface{}
+	isSlice bool
 }
+
+func (q *Query) populate() error {
+	for key, val := range q.populate {
+		//figure out type of the field being populated
+	}
+
+}
+
 
 func (q *Query) Select(selection interface{}) *Query {
 	q.selection = selection
@@ -41,19 +52,45 @@ func (q *Query) Sort(fields ...string) *Query {
 
 func (q *Query) Populate(fields ...string) *Query {
 	for _, elem := range fields {
-		q.populate[elem] = &Query{isPopOp: true}
+		field, isSlice, typ := findPopulatePath(field)
+		q.populate[elem] = &Query{isPopOp: true, populateField: field, 
+			,isSlice: isSlice}
+		q.populate[field] = query
 	}
 	return q
 }
 
 func (q *Query) PopulateQuery(field string, query *Query) *Query {
+	query.populateField, query.isSlice = findPopulatePath(field)
 	query.isPopOp = true
 	q.populate[field] = query
 	return q
 }
 
-func testPopulatePath(path) {
+func (q *Query) findPopulatePath(path string) (interface{}, bool) {
 	parts := strings.Split(path, ".")
+	resultVal := reflect.ValueOf(q.parentStruct).Elem()
+	
+	var refVal reflect.Value
+	for i, elem := range parts {
+		if i == 0 {
+			refVal = resultVal.fieldByName(elem)
+		} else {
+			refVal = refVal.fieldByName(elem)
+		}
+		
+		if !refVal.IsValid() {
+			panic("field `" + elem + "` not found in populate path `" + path + "`")
+		}
+	}
+
+	isSlice := false
+	if refVal.Kind() == reflect.Slice {
+		isSlice = true
+		elemType := refVal.Type().Elem()
+	}
+
+	return refVal, isSlice
 }
 
 func (query *Query) Exec(result interface{}) error {
@@ -124,3 +161,5 @@ func (query *Query) Exec(result interface{}) error {
 
 	return err
 }
+
+
