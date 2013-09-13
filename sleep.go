@@ -1,3 +1,6 @@
+// Package Sleep provides an intuitive library for working with MongoDB
+// documents (specially in a website environment).
+// It builds on top of the awesome mgo library
 package Sleep
 
 import (
@@ -25,124 +28,38 @@ func (z *Sleep) Register(schema interface{}, collectionName string) {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	z.models[structName] = Model{C: z.Db.C(collectionName)}
+	z.models[structName] = Model{C: z.Db.C(collectionName), isQueried: true}
 }
 
 func (z *Sleep) Find(query interface{}) *Query {
 	return &Query{query: query, z: z}
 }
 
-func (z *Sleep) Create(query interface{}) *Query {
-	return &Query{query: query}
-}
-
-type Query struct {
-	query     interface{}
-	selection interface{}
-	skip      int
-	limit     int
-	sort      []string
-	populate  []Query
-	path      string
-	z         *Sleep
-}
-
-type O struct {
-	Upsert bool
-	Multi  bool
-}
-
-func (q *Query) Select(selection interface{}) *Query {
-	q.selection = selection
-	return q
-}
-
-func (q *Query) Skip(skip int) *Query {
-	q.skip = skip
-	return q
-}
-
-func (q *Query) Limit(lim int) *Query {
-	q.limit = lim
-	return q
-}
-
-func (q *Query) Sort(fields ...string) *Query {
-	q.sort = fields
-	return q
-}
-
-func (query *Query) Exec(result interface{}) error {
-	typ := reflect.TypeOf(result).Elem()
-	var structName string
-	isSlice := false
-	if typ.Kind() == reflect.Slice {
-		structName = typ.Elem().Elem().Name()
-		isSlice = true
+func (z *Sleep) FindId(id interface{}) *Query {
+	typName := reflect.TypeOf(id).Name()
+	var idActual bson.ObjectId
+	if typName == "string" {
+		str := id.(string)
+		idActual = bson.ObjectIdHex(str)
+	} else if typName == "ObjectId" {
+		idActual = id.(bson.ObjectId)
 	} else {
-		structName = typ.Name()
+		panic("Invalid type passed to FindId! Will only accept `bson.ObjectId` or `string`")
 	}
+	return &Query{query: M{"_id": idActual}, z: z}
+}
 
-	model := query.z.models[structName]
-	q := model.C.Find(query.query)
+func (z *Sleep) Create(doc interface{}) {
+	typ := reflect.TypeOf(doc).Elem()
+	structName := typ.Name()
+	model := z.models[structName]
 
-	if query.limit != 0 {
-		q = q.Limit(query.limit)
-	}
-
-	if query.skip != 0 {
-		q = q.Skip(query.skip)
-	}
-
-	sortLen := len(query.sort)
-	if sortLen != 0 {
-		for i := 0; i < sortLen; i++ {
-			q = q.Sort(query.sort[i])
-		}
-	}
-
-	if query.selection != nil {
-		q = q.Select(query.selection)
-	}
-
-	var err error
-
-	if isSlice == true {
-		err = q.All(result)
-		if err != nil {
-			return err
-		}
-
-		val := reflect.ValueOf(result).Elem()
-		elemCount := val.Len()
-		for i := 0; i < elemCount; i++ {
-			modelCpy := query.z.models[structName]
-			sliceElem := val.Index(i)
-			modelCpy.doc = sliceElem.Interface()
-			modelElem := sliceElem.Elem().FieldByName("Model")
-			modelElem.Set(reflect.ValueOf(model))
-		}
-		return err
-	}
-
-	err = q.One(result)
-	if err != nil {
-		return err
-	}
-
-	model.doc = result
-	val := reflect.ValueOf(result).Elem()
+	model.doc = doc
+	val := reflect.ValueOf(doc).Elem()
 	modelVal := val.FieldByName("Model")
 	modelVal.Set(reflect.ValueOf(model))
 
-	return err
-}
-
-type Model struct {
-	C     *mgo.Collection
-	doc   interface{}
-	isNew bool
-}
-
-func (m *Model) Save() {
+	idField := reflect.ValueOf(doc).Elem().FieldByName("Id")
+	id := bson.NewObjectId()
+	idField.Set(reflect.ValueOf(id))
 }
