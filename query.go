@@ -100,7 +100,7 @@ func (q *Query) Populate(fields ...string) *Query {
 	return q
 }
 
-// PopulatQuery does the same thing the Populate function does, except it only takes one field path at a time and the second parameter is a value of type *Sleep.Query
+// PopulateQuery does the same thing the Populate function does, except it only takes one field path at a time and the second parameter is a value of type *Sleep.Query
 //
 // Example (continuing with the Populate example):
 //
