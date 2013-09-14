@@ -30,8 +30,10 @@ func (m *Model) Remove() error {
 	return nil
 }
 
-// Get gives access to a populated field
+// Get gives access to a populated field.
+//
 // The path must be exactly the same as what was passed to Query.Populate() or Query.PopulateQuery() and is case sensitive.
+//
 // The result parameter must be of the correct Type.
 // For example, if the field was defined as such in the schema:
 //
