@@ -60,10 +60,11 @@ func (z *Sleep) Find(query interface{}) *Query {
 
 // FindId is a convenience function equivalent to:
 //
-//     query := collection.Find(bson.M{"_id": id})
+//     query := sleep.Find(bson.M{"_id": id})
 //
 // Unlike the Mgo.Collection.FindId function, this function will accept Id both in hex representation as a string or a bson.ObjectId.
-// If a hex string representation of the ObjectId is passed, it will get parsed to a bson.ObjectId value
+// If a hex string representation of the ObjectId is passed, it will get parsed into to a bson.ObjectId value.
+//
 // FindId will return a chainable *Query value
 func (z *Sleep) FindId(id interface{}) *Query {
 	typName := reflect.TypeOf(id).Name()

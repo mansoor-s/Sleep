@@ -179,21 +179,43 @@ func (query *Query) Exec(result interface{}) error {
 	return err
 }
 
+// Select enables selecting which fields should be retrieved for the results found.
+// For example, the following query would only retrieve the name field:
+//
+//		err := sleep.Find(bson.M{"age": 50}).Select(bson.M{"name": 1}).Exec(result)
+//
+// Note 1: The _id field is always selected.. unless explicitly stated otherwise
+//
+// Note 2: If only some fields are selected for retrieval, and then the Save() is called on the document, the fields not retrieved will be blank and will overwrite the database values with the default value for their respective types.
 func (q *Query) Select(selection interface{}) *Query {
 	q.selection = selection
 	return q
 }
 
+// Skip skips over the n initial documents from the query results.
+// Using Skip only makes sense with ordered results and capped collections where documents are naturally ordered by insertion time.
 func (q *Query) Skip(skip int) *Query {
 	q.skip = skip
 	return q
 }
 
+// Limit sets the maximum number of document the database should return
 func (q *Query) Limit(lim int) *Query {
 	q.limit = lim
 	return q
 }
 
+// Sort sets the fields by which the database should sort the query results
+//
+// Example:
+// For example:
+//
+//		query1 := sleep.Find(nil).Sort("firstname", "lastname")
+//		query2 := sleep.Find(nil).Sort("-age")
+//		query3 := sleep.Find(nil).Sort("$natural")
+//
+//
+// Further reading: http://godoc.org/labix.org/v2/mgo#Query.Sort
 func (q *Query) Sort(fields ...string) *Query {
 	q.sort = fields
 	return q
