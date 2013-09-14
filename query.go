@@ -186,7 +186,7 @@ func (query *Query) Exec(result interface{}) error {
 //
 // Note 1: The _id field is always selected.. unless explicitly stated otherwise
 //
-// Note 2: If only some fields are selected for retrieval, and then the Save() is called on the document, the fields not retrieved will be blank and will overwrite the database values with the default value for their respective types.
+// Note 2**: If only some fields are selected for retrieval and then the Save() is called on the document, the fields not retrieved will be blank and will overwrite the database values with the default value for their respective types.
 func (q *Query) Select(selection interface{}) *Query {
 	q.selection = selection
 	return q
