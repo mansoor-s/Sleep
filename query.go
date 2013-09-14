@@ -70,26 +70,26 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 //
 // Example:
 //
-//    type Contact struct {
-//			BusinessPartner   bson.ObjectId
-//			Competitors       []bson.ObjectId
-//		}
+//	type Contact struct {
+//		BusinessPartner   bson.ObjectId
+//		Competitors       []bson.ObjectId
+//	}
 //
-//		type Person struct {
-//			Name           string
-//			PhoneNumber    string
-//			Friend         bson.ObjectId    `model:"Person"`
-//			Acquaintances  []bson.ObjectId  `model:"Person"`
-//			Contacts       []Contact
-//		}
+//	type Person struct {
+//		Name           string
+//		PhoneNumber    string
+//		Friend         bson.ObjectId    `model:"Person"`
+//		Acquaintances  []bson.ObjectId  `model:"Person"`
+//		Contacts       []Contact
+//	}
 //
-//		sleep.FindId("...").Populate("Friend", "Acquaintances").Exec(personResult)
+//	sleep.FindId("...").Populate("Friend", "Acquaintances").Exec(personResult)
 //
 // The path argument can also describe embeded structs. Every step into an embeded struct is seperated by a "."
 //
 // Example:
 //
-//		sleep.FindId("...").Populate("Contacts.BusinessPartner", "Contacts.Competitors").Exec(personResult)
+//	sleep.FindId("...").Populate("Contacts.BusinessPartner", "Contacts.Competitors").Exec(personResult)
 //
 func (q *Query) Populate(fields ...string) *Query {
 	for _, elem := range fields {
