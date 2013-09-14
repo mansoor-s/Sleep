@@ -61,7 +61,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 	return nil
 }
 
-// Populate sets what fields to be automatically populated.
+// Populate sets the fields to be automatically populated.
 //
 // This function takes a variable number of arguments.
 // Each argument must be the full path to the field to be populated.
@@ -100,7 +100,18 @@ func (q *Query) Populate(fields ...string) *Query {
 	return q
 }
 
-// PopulatQuery does the same thing the Populate function does, except it only takes one field path at a time
+// PopulatQuery does the same thing the Populate function does, except it only takes one field path at a time and the second parameter is a value of type *Sleep.Query
+//
+// Example (continuing with the Populate example):
+//
+//	//I want 10 acquantances that are older than 30 and sorted by their names
+//	popQuery := sleep.Find(bson.M{"age": bson.M{"$gt": 30} }).Limit(10).Sort("name")
+//	sleep.FindId("...").PopulateQuery("Acquaintances", popQuery).Exec(personResult)
+//
+// You may also call Populate() and PopulateQuery() on the populate Query value to run auto-population on the populated results.
+//
+//	popQuery := sleep.Find(bson.M{"age": bson.M{"$gt": 30} }).Limit(10).Sort("name").Populate("Friend")
+//
 func (q *Query) PopulateQuery(field string, query *Query) *Query {
 	query.isPopOp = true
 	query.populate = make(map[string]*Query)
