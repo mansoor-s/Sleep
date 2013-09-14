@@ -37,17 +37,14 @@ func (m *Model) Remove() error {
 //
 //		Foo: bson.ObjectId   `model:"Bar"`
 //
-// Then the argument must be of type:
-//
-//		*Bar
-//
+// Then the argument must be of type   *Bar
 // Or, if the field was defined as:
 //
 //		Foo: []bson.ObjectId   `model:"Bar"`
 //
-// Then the argument must be of type:
+// Then the argument must be of type:   *[]*Bar
 //
-//		*[]*Bar
+//
 func (m *Model) Get(path string, result interface{}) bool {
 	value, ok := m.populated[path]
 	if !ok {
