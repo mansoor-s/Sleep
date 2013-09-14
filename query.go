@@ -74,6 +74,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 //			BusinessPartner   bson.ObjectId
 //			Competitors       []bson.ObjectId
 //		}
+//
 //		type Person struct {
 //			Name           string
 //			PhoneNumber    string
@@ -81,6 +82,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 //			Acquaintances  []bson.ObjectId  `model:"Person"`
 //			Contacts       []Contact
 //		}
+//
 //		sleep.FindId("...").Populate("Friend", "Acquaintances").Exec(personResult)
 //
 // The path argument can also describe embeded structs. Every step into an embeded struct is seperated by a "."
