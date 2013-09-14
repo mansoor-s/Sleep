@@ -24,6 +24,10 @@ func (m *Model) Save() error {
 	return err
 }
 
+func (m *Model) Remove() error {
+	return nil
+}
+
 //
 func (m *Model) Get(path string, result interface{}) bool {
 	value, ok := m.populated[path]
@@ -35,3 +39,31 @@ func (m *Model) Get(path string, result interface{}) bool {
 }
 
 //implement stand-in hooks here
+
+func (m *Model) PreSave() {
+
+}
+
+func (m *Model) PostSave() {
+
+}
+
+func (m *Model) PreRemove() {
+
+}
+
+func (m *Model) PostRemove() {
+
+}
+
+func (m *Model) Create() {
+
+}
+
+func (m *Model) PreUpdate() {
+
+}
+
+func (m *Model) PostUpdate() {
+
+}
