@@ -108,6 +108,24 @@ func (q *Query) findPopulatePath(path string) {
 	q.populateField = refVal.Interface()
 }
 
+// Exec executes the query.
+// What collection to query on is determined by the result parameter.
+// Exec does the job of both mgo.Collection.One() and mgo.Collection.All().
+//
+// Example 1 (Equivalent to mgo.Collection.One() ):
+//
+//		type Foo struct {...}
+//		foo := &Foo{} //foo is a pointer to the value for a single Foo struct
+//		sleep.Find(bson.M{"location:": "Earth"}).Exec(foo)
+//
+// Example 2 (Equivalent to mgo.Collection.All() ):
+//
+//		type Foo struct {...}
+//		foo := []*Foo{} //foo is the value for a slice of pointers to Foo structs
+//		sleep.Find(bson.M{"location:": "Earth"}).Exec(&foo)
+//		//Another example showing further filtering
+//		sleep.Find(bson.M{"location:": "Earth"}).Sort("name", "age").Limit(200).Exec(&foo)
+//
 func (query *Query) Exec(result interface{}) error {
 	if reflect.TypeOf(result).Kind() != reflect.Ptr {
 		panic(fmt.Sprintf("Expecting a pointer type but recieved %v. If you are passing in a slice, make sure to pass a pointer to it.", reflect.TypeOf(result)))
