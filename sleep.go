@@ -46,6 +46,7 @@ func (z *Sleep) Register(schema interface{}, collectionName string) {
 
 // Find starts a chainable *Query value
 // This function passes the supplied value to mgo.Collection.Find
+//
 // To borrow from the mgo docs: "The document(argument) may be a map or a struct value capable of being marshalled with bson.
 // The map may be a generic one using interface{} for its key and/or values, such as bson.M, or it may be a properly typed map.
 // Providing nil as the document is equivalent to providing an empty document such as bson.M{}".
@@ -81,9 +82,11 @@ func (z *Sleep) FindId(id interface{}) *Query {
 }
 
 // Create conditions an instance of the model to become a document.
+//
 // What it means in pratical terms is that Create sets a value for the schema's Model(Sleep.Model) anonymous field. This will allow Sleep to work with the value as a document.
 // Calling this function is only necessary when wishing to create documents "manually".
 // It is not necessary to call this function on a value that will be holding the result of a query; Sleep will do that.
+//
 // After a document is created with this function, the document will expose all of the public methods and fields of the Sleep.Model struct as its own.
 func (z *Sleep) Create(doc interface{}) {
 	typ := reflect.TypeOf(doc).Elem()
