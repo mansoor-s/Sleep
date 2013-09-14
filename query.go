@@ -71,15 +71,15 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 // Example:
 //
 //    type Contact struct {
-//			BusinessPartner		bson.ObjectId
-//			Competitors				[]bson.ObjectId
+//			BusinessPartner   bson.ObjectId
+//			Competitors       []bson.ObjectId
 //		}
 //		type Person struct {
-//			Name 						string
-//			PhoneNumber 		string
-//			Friend 					bson.ObjectId			`model:"Person"`
-//			Acquaintances		[]bson.ObjectId		`model:"Person"`
-//			Contacts				[]Contact
+//			Name           string
+//			PhoneNumber    string
+//			Friend         bson.ObjectId    `model:"Person"`
+//			Acquaintances  []bson.ObjectId  `model:"Person"`
+//			Contacts       []Contact
 //		}
 //		sleep.FindId("...").Populate("Friend", "Acquaintances").Exec(personResult)
 //
