@@ -76,7 +76,7 @@ func (z *Sleep) FindId(id interface{}) *Query {
 
 // Create conditions an instance of the model to become a document.
 // What it means in pratical terms is that Create sets a value for the schema's Model(Sleep.Model) anonymous field. This will allow Sleep to work with the value
-// Calling this function is only necessary when wishing to create documents "manually".
+// calling this function is only necessary when wishing to create documents "manually".
 // It is not necessary to call this function on a value that will be holding the result of a query
 // After a document is created with this function, the document will expose all of the public methods and fields of the Sleep.Model struct as its own.
 func (z *Sleep) Create(doc interface{}) {
