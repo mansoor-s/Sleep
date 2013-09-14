@@ -1,5 +1,5 @@
-// Package Sleep provides an intuitive library for working with MongoDB
-// documents (specially in a website environment).
+// Package Sleep provides an intuitive ODM (Object Document Model)library for working
+// with MongoDB documents (specially in a website environment).
 // It builds on top of the awesome mgo library
 package Sleep
 
@@ -14,13 +14,13 @@ type M bson.M
 type D bson.D
 
 type Sleep struct {
-	Db     		*mgo.Database
-	models 		map[string]Model
-	modelTag 	string
+	Db       *mgo.Database
+	models   map[string]Model
+	modelTag string
 }
 
 func New(session *mgo.Session, dbName string) *Sleep {
-	sleep := &Sleep{Db: session.DB(dbName)}
+	sleep := &Sleep{Db: session.DB(dbName), modelTag: "model"}
 	sleep.models = make(map[string]Model)
 	return sleep
 }
@@ -29,17 +29,18 @@ func (z *Sleep) SetModelTag(key string) {
 	z.modelTag = key
 }
 
-
 func (z *Sleep) Register(schema interface{}, collectionName string) {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	z.models[structName] = Model{C: z.Db.C(collectionName), 
-		isQueried: true, schema: schema}
+	z.models[structName] = Model{C: z.Db.C(collectionName),
+		isQueried: true, schema: schema, populated: make(map[string]interface{})}
 }
 
 func (z *Sleep) Find(query interface{}) *Query {
-	return &Query{query: query, z: z}
+	return &Query{query: query, z: z,
+		populate:  make(map[string]*Query),
+		populated: make(map[string]interface{})}
 }
 
 func (z *Sleep) FindId(id interface{}) *Query {
@@ -53,7 +54,9 @@ func (z *Sleep) FindId(id interface{}) *Query {
 	} else {
 		panic("Invalid type passed to FindId! Will only accept `bson.ObjectId` or `string`")
 	}
-	return &Query{query: M{"_id": idActual}, z: z}
+	return &Query{query: M{"_id": idActual}, z: z,
+		populate:  make(map[string]*Query),
+		populated: make(map[string]interface{})}
 }
 
 func (z *Sleep) Create(doc interface{}) {
@@ -71,9 +74,8 @@ func (z *Sleep) Create(doc interface{}) {
 	idField.Set(reflect.ValueOf(id))
 }
 
-
 func (z *Sleep) C(model string) (*mgo.Collection, bool) {
-	model, ok := z.models[model]
-	c := model.C
+	m, ok := z.models[model]
+	c := m.C
 	return c, ok
 }

@@ -2,95 +2,110 @@ package Sleep
 
 import (
 	"fmt"
+	"labix.org/v2/mgo/bson"
 	"reflect"
 	"strings"
 )
 
 type Query struct {
-	query     interface{}
-	selection interface{}
-	skip      int
-	limit     int
-	sort      []string
-	populate  map[string]*Query
-	path      string
-	z         *Sleep
-	populated map[string]interface{}
-	isPopOp   bool
-	parentStruct intrface{}
+	query         interface{}
+	selection     interface{}
+	skip          int
+	limit         int
+	sort          []string
+	populate      map[string]*Query
+	path          string
+	z             *Sleep
+	populated     map[string]interface{}
+	isPopOp       bool
+	parentStruct  interface{}
 	populateField interface{}
-	isSlice bool
+	isSlice       bool
+	popModel      string
 }
 
-func (q *Query) populate() error {
+func (q *Query) populateExec(parentStruct interface{}) error {
 	for key, val := range q.populate {
-		//figure out type of the field being populated
+		val.parentStruct = parentStruct
+		val.findPopulatePath(key)
+		model, ok := q.z.models[val.popModel]
+		if !ok {
+			panic("Unable to find `" + val.popModel + "` model. Was it registered?")
+		}
+
+		var schema interface{}
+		if val.isSlice {
+			ids := val.populateField.([]bson.ObjectId)
+			if len(ids) == 0 {
+				return nil
+			}
+
+			schemaType := reflect.PtrTo(reflect.TypeOf(model.schema))
+			slicedType := reflect.SliceOf(schemaType)
+			schema = reflect.New(slicedType).Interface()
+			val.query = M{"_id": M{"$in": ids}}
+
+		} else {
+			schema = &model.schema
+			id := val.populateField.(bson.ObjectId)
+			va.query = M{"_id": id}
+		}
+
+		err := val.Exec(schema)
+		if err != nil {
+			panic(err)
+		}
+		parentModel := reflect.ValueOf(val.parentStruct).Elem().FieldByName("Model").Interface().(Model)
+		parentModel.populated[key] = schema
 	}
-
-}
-
-
-func (q *Query) Select(selection interface{}) *Query {
-	q.selection = selection
-	return q
-}
-
-func (q *Query) Skip(skip int) *Query {
-	q.skip = skip
-	return q
-}
-
-func (q *Query) Limit(lim int) *Query {
-	q.limit = lim
-	return q
-}
-
-func (q *Query) Sort(fields ...string) *Query {
-	q.sort = fields
-	return q
+	return nil
 }
 
 func (q *Query) Populate(fields ...string) *Query {
 	for _, elem := range fields {
-		field, isSlice, typ := findPopulatePath(field)
-		q.populate[elem] = &Query{isPopOp: true, populateField: field, 
-			,isSlice: isSlice}
-		q.populate[field] = query
+		q.populate[elem] = &Query{isPopOp: true,
+			populate:  make(map[string]*Query),
+			populated: make(map[string]interface{}), z: q.z}
 	}
 	return q
 }
 
 func (q *Query) PopulateQuery(field string, query *Query) *Query {
-	query.populateField, query.isSlice = findPopulatePath(field)
 	query.isPopOp = true
+	query.populate = make(map[string]*Query)
+	query.populated = make(map[string]interface{})
+	query.z = q.z
 	q.populate[field] = query
 	return q
 }
 
-func (q *Query) findPopulatePath(path string) (interface{}, bool) {
+func (q *Query) findPopulatePath(path string) {
 	parts := strings.Split(path, ".")
 	resultVal := reflect.ValueOf(q.parentStruct).Elem()
-	
+
 	var refVal reflect.Value
-	for i, elem := range parts {
+	partsLen := len(parts)
+	for i := 0; i < partsLen; i++ {
+		elem := parts[i]
 		if i == 0 {
-			refVal = resultVal.fieldByName(elem)
-		} else {
-			refVal = refVal.fieldByName(elem)
+			refVal = resultVal.FieldByName(elem)
+			structTag, _ := resultVal.Type().FieldByName(elem)
+			q.popModel = structTag.Tag.Get(q.z.modelTag)
+		} else if i == partsLen-1 {
+			structTag, _ := refVal.Type().FieldByName(elem)
+			q.popModel = structTag.Tag.Get(q.z.modelTag)
+			refVal = refVal.FieldByName(elem)
 		}
-		
+
 		if !refVal.IsValid() {
 			panic("field `" + elem + "` not found in populate path `" + path + "`")
 		}
 	}
 
-	isSlice := false
 	if refVal.Kind() == reflect.Slice {
-		isSlice = true
-		elemType := refVal.Type().Elem()
+		q.isSlice = true
 	}
-
-	return refVal, isSlice
+	q.populateField = refVal.Interface()
 }
 
 func (query *Query) Exec(result interface{}) error {
@@ -159,7 +174,27 @@ func (query *Query) Exec(result interface{}) error {
 	modelVal := val.FieldByName("Model")
 	modelVal.Set(reflect.ValueOf(model))
 
+	query.populateExec(result)
+
 	return err
 }
 
+func (q *Query) Select(selection interface{}) *Query {
+	q.selection = selection
+	return q
+}
 
+func (q *Query) Skip(skip int) *Query {
+	q.skip = skip
+	return q
+}
+
+func (q *Query) Limit(lim int) *Query {
+	q.limit = lim
+	return q
+}
+
+func (q *Query) Sort(fields ...string) *Query {
+	q.sort = fields
+	return q
+}
