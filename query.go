@@ -61,6 +61,34 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 	return nil
 }
 
+// Populate sets what fields to be automatically populated.
+//
+// This function takes a variable number of arguments.
+// Each argument must be the full path to the field to be populated.
+// The field to be populated can be either of type bson.ObjectId or []bson.ObjectId.
+// The field must also have a tag with the key "model" and a case sensative value with the name of the model.
+//
+// Example:
+//
+//    type Contact struct {
+//			BusinessPartner		bson.ObjectId
+//			Competitors				[]bson.ObjectId
+//		}
+//		type Person struct {
+//			Name 						string
+//			PhoneNumber 		string
+//			Friend 					bson.ObjectId			`model:"Person"`
+//			Acquaintances		[]bson.ObjectId		`model:"Person"`
+//			Contacts				[]Contact
+//		}
+//		sleep.FindId("...").Populate("Friend", "Acquaintances").Exec(personResult)
+//
+// The path argument can also describe embeded structs. Every step into an embeded struct is seperated by a "."
+//
+// Example:
+//
+//		sleep.FindId("...").Populate("Contacts.BusinessPartner", "Contacts.Competitors").Exec(personResult)
+//
 func (q *Query) Populate(fields ...string) *Query {
 	for _, elem := range fields {
 		q.populate[elem] = &Query{isPopOp: true,
@@ -70,6 +98,7 @@ func (q *Query) Populate(fields ...string) *Query {
 	return q
 }
 
+// PopulatQuery does the same thing the Populate function does, except it only takes one field path at a time
 func (q *Query) PopulateQuery(field string, query *Query) *Query {
 	query.isPopOp = true
 	query.populate = make(map[string]*Query)
@@ -109,6 +138,7 @@ func (q *Query) findPopulatePath(path string) {
 }
 
 // Exec executes the query.
+//
 // What collection to query on is determined by the result parameter.
 // Exec does the job of both mgo.Collection.One() and mgo.Collection.All().
 //
