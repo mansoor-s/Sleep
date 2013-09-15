@@ -48,7 +48,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 		} else {
 			schema = &model.schema
 			id := val.populateField.(bson.ObjectId)
-			va.query = M{"_id": id}
+			val.query = M{"_id": id}
 		}
 
 		err := val.Exec(schema)
@@ -137,6 +137,8 @@ func (q *Query) findPopulatePath(path string) {
 			structTag, _ := refVal.Type().FieldByName(elem)
 			q.popModel = structTag.Tag.Get(q.z.modelTag)
 			refVal = refVal.FieldByName(elem)
+		} else {
+			refVal = handleSlice(refVal, elem, path)
 		}
 
 		if !refVal.IsValid() {
@@ -148,6 +150,35 @@ func (q *Query) findPopulatePath(path string) {
 		q.isSlice = true
 	}
 	q.populateField = refVal.Interface()
+}
+
+func handleSlice(parent reflect.Value, childField string, path string) reflect.Value {
+	thisElem := parent.FieldByName(childField)
+	if !thisElem.IsValid() {
+		panic("field `" + childField + "` not found in populate path `" + path + "`")
+	}
+
+	thisType := parent.FieldByName(childField).Type()
+	thisKind := thisType.Kind()
+	if thisKind == reflect.Slice {
+		//create an element with the type of the slice's elements so that we
+		//can continue to walk the path
+		thisElem = reflect.New(thisType.Elem()).Elem()
+	}
+
+	//handle slices of slices
+	if thisElem.Type().Kind() == reflect.Slice {
+		thisElem = handleSlice(thisElem, childField, path)
+	}
+
+	//handleSlice is only be called if the current field is neither the firt, nor the last.
+	//If this field is somewhere in the middle of the path, it should either of type Struct,
+	//or of type slice. Since we already handle slice situations *see recursion above*, the field
+	//could only be a struct.
+	if thisElem.Type().Kind() != reflect.Struct {
+		panic("Malformed populate path: " + path)
+	}
+	return thisElem
 }
 
 // Exec executes the query.
