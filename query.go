@@ -2,6 +2,7 @@ package Sleep
 
 import (
 	"fmt"
+	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"reflect"
 	"strings"
@@ -61,7 +62,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 	return nil
 }
 
-// Populate sets the fields to be automatically populated.
+// Populate sets the fields to be automatically populated based on the field's bson.ObjectId value.
 //
 // This function takes a variable number of arguments.
 // Each argument must be the full path to the field to be populated.
@@ -138,7 +139,8 @@ func (q *Query) findPopulatePath(path string) {
 			q.popModel = structTag.Tag.Get(q.z.modelTag)
 			refVal = refVal.FieldByName(elem)
 		} else {
-			refVal = handleSlice(refVal, elem, path)
+			//refVal = handleSlice(refVal, elem, path)
+			refVal = refVal.FieldByName(elem)
 		}
 
 		if !refVal.IsValid() {
@@ -152,6 +154,7 @@ func (q *Query) findPopulatePath(path string) {
 	q.populateField = refVal.Interface()
 }
 
+/*
 func handleSlice(parent reflect.Value, childField string, path string) reflect.Value {
 	thisElem := parent.FieldByName(childField)
 	if !thisElem.IsValid() {
@@ -180,6 +183,7 @@ func handleSlice(parent reflect.Value, childField string, path string) reflect.V
 	}
 	return thisElem
 }
+*/
 
 // Exec executes the query.
 //
@@ -240,8 +244,13 @@ func (query *Query) Exec(result interface{}) error {
 
 	if isSlice == true {
 		err = q.All(result)
+
 		if err != nil {
-			return err
+			if err == mgo.ErrNotFound {
+				return nil
+			} else {
+				return err
+			}
 		}
 
 		val := reflect.ValueOf(result).Elem()
@@ -250,6 +259,7 @@ func (query *Query) Exec(result interface{}) error {
 			modelCpy := query.z.models[structName]
 			sliceElem := val.Index(i)
 			modelCpy.doc = sliceElem.Interface()
+			modelCpy.Virtual = newVirtual()
 			modelElem := sliceElem.Elem().FieldByName("Model")
 			modelElem.Set(reflect.ValueOf(model))
 		}
@@ -257,18 +267,24 @@ func (query *Query) Exec(result interface{}) error {
 	}
 
 	err = q.One(result)
-	if err != nil {
-		return err
-	}
-
 	model.doc = result
+	model.Virtual = newVirtual()
 	val := reflect.ValueOf(result).Elem()
 	modelVal := val.FieldByName("Model")
 	modelVal.Set(reflect.ValueOf(model))
 
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			modelVal.Elem().FieldByName("Found").SetBool(false)
+			return nil
+		} else {
+			return err
+		}
+	}
+
 	query.populateExec(result)
 
-	return err
+	return nil
 }
 
 // Select enables selecting which fields should be retrieved for the results found.

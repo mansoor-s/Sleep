@@ -41,7 +41,8 @@ func (z *Sleep) Register(schema interface{}, collectionName string) {
 	structName := typ.Name()
 
 	z.models[structName] = Model{C: z.Db.C(collectionName),
-		isQueried: true, schema: schema, populated: make(map[string]interface{})}
+		isQueried: true, schema: schema,
+		populated: make(map[string]interface{}), Found: true}
 }
 
 // Find starts a chainable *Query value

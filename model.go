@@ -11,6 +11,8 @@ type Model struct {
 	isQueried bool
 	populated map[string]interface{}
 	schema    interface{}
+	Found     bool
+	Virtual   *Virtual
 }
 
 // Save uses MongoDB's upsert command to either update an existing document or insert it into the collection.
@@ -30,7 +32,11 @@ func (m *Model) Remove() error {
 	return nil
 }
 
-// Get gives access to a populated field.
+func (m *Model) IsValid() bool {
+	return m.Found
+}
+
+// Field gives access to a populated field.
 //
 // The path must be exactly the same as what was passed to Query.Populate() or Query.PopulateQuery() and is case sensitive.
 //
@@ -47,7 +53,7 @@ func (m *Model) Remove() error {
 // Then the argument must be of type:   *[]*Bar
 //
 //
-func (m *Model) Get(path string, result interface{}) bool {
+func (m *Model) Field(path string, result interface{}) bool {
 	value, ok := m.populated[path]
 	if !ok {
 		return ok
