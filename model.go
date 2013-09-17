@@ -2,92 +2,58 @@ package Sleep
 
 import (
 	"labix.org/v2/mgo"
-	"reflect"
+	"labix.org/v2/mgo/bson"
 )
 
 type Model struct {
-	C         *mgo.Collection
-	doc       interface{}
-	isQueried bool
-	populated map[string]interface{}
-	schema    interface{}
-	Found     bool
-	Virtual   *Virtual
+	*mgo.Collection
+	C *mgo.Collection
+	z *Sleep
 }
 
-// Save uses MongoDB's upsert command to either update an existing document or insert it into the collection.
-// The document's schma MUST have an Id field.
-func (m *Model) Save() error {
-	idField := reflect.ValueOf(m.doc).Elem().FieldByName("Id")
-	if !idField.IsValid() {
-		panic("Model `" + reflect.TypeOf(m.doc).Elem().Name() + "` must have an `Id` field")
-	}
-
-	id := idField.Interface()
-	_, err := m.C.UpsertId(id, m.doc)
-	return err
+func newModel(collection *mgo.Collection, z *Sleep) *Model {
+	model := &Model{collection, collection, z}
+	return model
 }
 
-func (m *Model) Remove() error {
-	return nil
+func (m *Model) CreateDoc(i interface{}) {
+	m.z.CreateDoc(i)
 }
 
-func (m *Model) IsValid() bool {
-	return m.Found
-}
-
-// Field gives access to a populated field.
+// Find starts a chainable *Query value
+// This function passes the passed value to mgo.Collection.Find
 //
-// The path must be exactly the same as what was passed to Query.Populate() or Query.PopulateQuery() and is case sensitive.
+// To borrow from the mgo docs: "The document(argument) may be a map or a struct value capable of being marshalled with bson.
+// The map may be a generic one using interface{} for its key and/or values, such as bson.M, or it may be a properly typed map.
+// Providing nil as the document is equivalent to providing an empty document such as bson.M{}".
 //
-// The result parameter must be of the correct Type.
-// For example, if the field was defined as such in the schema:
-//
-//		Foo: bson.ObjectId   `model:"Bar"`
-//
-// Then the argument must be of type   *Bar
-// Or, if the field was defined as:
-//
-//		Foo: []bson.ObjectId   `model:"Bar"`
-//
-// Then the argument must be of type:   *[]*Bar
-//
-//
-func (m *Model) Field(path string, result interface{}) bool {
-	value, ok := m.populated[path]
-	if !ok {
-		return ok
-	}
-	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(value).Elem())
-	return ok
+// Further reading: http://godoc.org/labix.org/v2/mgo#Collection.Find
+func (m *Model) Find(query interface{}) *Query {
+	return &Query{query: query, z: m.z,
+		populate:  make(map[string]*Query),
+		populated: make(map[string]interface{}), c: m.C}
 }
 
-//implement stand-in hooks here
-
-func (m *Model) PreSave() {
-
+// FindId is a convenience function equivalent to:
+//
+//     query := myModel.Find(bson.M{"_id": id})
+//
+// Unlike the Mgo.Collection.FindId function, this function will accept Id both in hex representation as a string or a bson.ObjectId.
+// If a hex string representation of the ObjectId is passed, it will get parsed into to a bson.ObjectId value.
+//
+// FindId will return a chainable *Query value
+func (m *Model) FindId(id interface{}) *Query {
+	return m.Find(bson.M{"_id": ObjectId(id)})
 }
 
-func (m *Model) PostSave() {
-
+func (m *Model) RemoveId(id interface{}) error {
+	return m.C.RemoveId(ObjectId(id))
 }
 
-func (m *Model) PreRemove() {
-
+func (m *Model) UpdateId(id interface{}, change interface{}) error {
+	return m.C.UpdateId(ObjectId(id), change)
 }
 
-func (m *Model) PostRemove() {
-
-}
-
-func (m *Model) Create() {
-
-}
-
-func (m *Model) PreUpdate() {
-
-}
-
-func (m *Model) PostUpdate() {
-
+func (m *Model) UpsertId(id interface{}, change interface{}) (*mgo.ChangeInfo, error) {
+	return m.C.UpsertId(ObjectId(id), change)
 }

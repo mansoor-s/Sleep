@@ -16,15 +16,17 @@ type M bson.M
 type D bson.D
 
 type Sleep struct {
-	Db       *mgo.Database
-	models   map[string]Model
-	modelTag string
+	Db        *mgo.Database
+	documents map[string]Document
+	models    map[string]*Model
+	modelTag  string
 }
 
 // New returns a new intance of the Sleep type
 func New(session *mgo.Session, dbName string) *Sleep {
 	sleep := &Sleep{Db: session.DB(dbName), modelTag: "model"}
-	sleep.models = make(map[string]Model)
+	sleep.documents = make(map[string]Document)
+	sleep.models = make(map[string]*Model)
 	return sleep
 }
 
@@ -36,69 +38,36 @@ func (z *Sleep) SetModelTag(key string) {
 
 // Register registers a given schema and its corresponding collection name with Sleep.
 // All schemas MUST be registered using this function.
-func (z *Sleep) Register(schema interface{}, collectionName string) {
+// Function will return a pointer to the Sleep.Model value for this model
+func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	z.models[structName] = Model{C: z.Db.C(collectionName),
+	z.documents[structName] = Document{C: z.Db.C(collectionName),
 		isQueried: true, schema: schema,
 		populated: make(map[string]interface{}), Found: true}
+
+	model := newModel(z.Db.C(collectionName), z)
+	z.models[structName] = model
+	return model
 }
 
-// Find starts a chainable *Query value
-// This function passes the supplied value to mgo.Collection.Find
+// CreateDoc conditions an instance of the model to become a document.
 //
-// To borrow from the mgo docs: "The document(argument) may be a map or a struct value capable of being marshalled with bson.
-// The map may be a generic one using interface{} for its key and/or values, such as bson.M, or it may be a properly typed map.
-// Providing nil as the document is equivalent to providing an empty document such as bson.M{}".
-//
-// Further reading: http://godoc.org/labix.org/v2/mgo#Collection.Find
-func (z *Sleep) Find(query interface{}) *Query {
-	return &Query{query: query, z: z,
-		populate:  make(map[string]*Query),
-		populated: make(map[string]interface{})}
-}
-
-// FindId is a convenience function equivalent to:
-//
-//     query := sleep.Find(bson.M{"_id": id})
-//
-// Unlike the Mgo.Collection.FindId function, this function will accept Id both in hex representation as a string or a bson.ObjectId.
-// If a hex string representation of the ObjectId is passed, it will get parsed into to a bson.ObjectId value.
-//
-// FindId will return a chainable *Query value
-func (z *Sleep) FindId(id interface{}) *Query {
-	typName := reflect.TypeOf(id).Name()
-	var idActual bson.ObjectId
-	if typName == "string" {
-		str := id.(string)
-		idActual = bson.ObjectIdHex(str)
-	} else if typName == "ObjectId" {
-		idActual = id.(bson.ObjectId)
-	} else {
-		panic("Invalid type passed to FindId! Will only accept `bson.ObjectId` or `string`")
-	}
-	return &Query{query: M{"_id": idActual}, z: z,
-		populate:  make(map[string]*Query),
-		populated: make(map[string]interface{})}
-}
-
-// Create conditions an instance of the model to become a document.
-//
-// What it means in pratical terms is that Create sets a value for the schema's Model(Sleep.Model) anonymous field. This will allow Sleep to work with the value as a document.
+// What it means in pratical terms is that Create sets a value for the schema's *Sleep.Document anonymous field. This will allow Sleep to work with the value as a document.
 // Calling this function is only necessary when wishing to create documents "manually".
 // It is not necessary to call this function on a value that will be holding the result of a query; Sleep will do that.
 //
 // After a document is created with this function, the document will expose all of the public methods and fields of the Sleep.Model struct as its own.
-func (z *Sleep) Create(doc interface{}) {
+func (z *Sleep) CreateDoc(doc interface{}) {
 	typ := reflect.TypeOf(doc).Elem()
 	structName := typ.Name()
-	model := z.models[structName]
+	document := z.documents[structName]
 
-	model.doc = doc
+	document.doc = doc
 	val := reflect.ValueOf(doc).Elem()
-	modelVal := val.FieldByName("Model")
-	modelVal.Set(reflect.ValueOf(model))
+	docVal := val.FieldByName("Document")
+	docVal.Set(reflect.ValueOf(document))
 
 	idField := reflect.ValueOf(doc).Elem().FieldByName("Id")
 	id := bson.NewObjectId()
@@ -108,7 +77,25 @@ func (z *Sleep) Create(doc interface{}) {
 // C gives access to the underlying *mgo.Collection value for a model.
 // The model name is case sensitive.
 func (z *Sleep) C(model string) (*mgo.Collection, bool) {
-	m, ok := z.models[model]
+	m, ok := z.documents[model]
 	c := m.C
 	return c, ok
+}
+
+func (z *Sleep) Model(name string) *Model {
+	return z.models[name]
+}
+
+func ObjectId(id interface{}) bson.ObjectId {
+	var idActual bson.ObjectId
+	switch id.(type) {
+	case string:
+		idActual = bson.ObjectIdHex(id.(string))
+		break
+	case bson.ObjectId:
+		idActual = id.(bson.ObjectId)
+	default:
+		panic("Only accepts types `string` and `bson.ObjectId` accepted as Id")
+	}
+	return idActual
 }

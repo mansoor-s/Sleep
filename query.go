@@ -17,6 +17,7 @@ type Query struct {
 	populate      map[string]*Query
 	path          string
 	z             *Sleep
+	c             *mgo.Collection
 	populated     map[string]interface{}
 	isPopOp       bool
 	parentStruct  interface{}
@@ -29,7 +30,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 	for key, val := range q.populate {
 		val.parentStruct = parentStruct
 		val.findPopulatePath(key)
-		model, ok := q.z.models[val.popModel]
+		model, ok := q.z.documents[val.popModel]
 		if !ok {
 			panic("Unable to find `" + val.popModel + "` model. Was it registered?")
 		}
@@ -56,7 +57,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 		if err != nil {
 			panic(err)
 		}
-		parentModel := reflect.ValueOf(val.parentStruct).Elem().FieldByName("Model").Interface().(Model)
+		parentModel := reflect.ValueOf(val.parentStruct).Elem().FieldByName("Document").Interface().(Document)
 		parentModel.populated[key] = schema
 	}
 	return nil
@@ -96,7 +97,7 @@ func (q *Query) Populate(fields ...string) *Query {
 	for _, elem := range fields {
 		q.populate[elem] = &Query{isPopOp: true,
 			populate:  make(map[string]*Query),
-			populated: make(map[string]interface{}), z: q.z}
+			populated: make(map[string]interface{}), z: q.z, c: q.c}
 	}
 	return q
 }
@@ -118,6 +119,7 @@ func (q *Query) PopulateQuery(field string, query *Query) *Query {
 	query.populate = make(map[string]*Query)
 	query.populated = make(map[string]interface{})
 	query.z = q.z
+	query.c = q.c
 	q.populate[field] = query
 	return q
 }
@@ -218,8 +220,7 @@ func (query *Query) Exec(result interface{}) error {
 		structName = typ.Name()
 	}
 
-	model := query.z.models[structName]
-	q := model.C.Find(query.query)
+	q := query.c.Find(query.query)
 
 	if query.limit != 0 {
 		q = q.Limit(query.limit)
@@ -240,11 +241,10 @@ func (query *Query) Exec(result interface{}) error {
 		q = q.Select(query.selection)
 	}
 
+	document := query.z.documents[structName]
 	var err error
-
 	if isSlice == true {
 		err = q.All(result)
-
 		if err != nil {
 			if err == mgo.ErrNotFound {
 				return nil
@@ -252,30 +252,29 @@ func (query *Query) Exec(result interface{}) error {
 				return err
 			}
 		}
-
 		val := reflect.ValueOf(result).Elem()
 		elemCount := val.Len()
 		for i := 0; i < elemCount; i++ {
-			modelCpy := query.z.models[structName]
+			modelCpy := query.z.documents[structName]
 			sliceElem := val.Index(i)
 			modelCpy.doc = sliceElem.Interface()
 			modelCpy.Virtual = newVirtual()
-			modelElem := sliceElem.Elem().FieldByName("Model")
-			modelElem.Set(reflect.ValueOf(model))
+			modelElem := sliceElem.Elem().FieldByName("Document")
+			modelElem.Set(reflect.ValueOf(document))
 		}
 		return err
 	}
 
 	err = q.One(result)
-	model.doc = result
-	model.Virtual = newVirtual()
+	document.doc = result
+	document.Virtual = newVirtual()
 	val := reflect.ValueOf(result).Elem()
-	modelVal := val.FieldByName("Model")
-	modelVal.Set(reflect.ValueOf(model))
+	documentVal := val.FieldByName("Document")
+	documentVal.Set(reflect.ValueOf(document))
 
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			modelVal.Elem().FieldByName("Found").SetBool(false)
+			documentVal.Elem().FieldByName("Found").SetBool(false)
 			return nil
 		} else {
 			return err
