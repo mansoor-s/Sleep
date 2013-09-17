@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// Virtual holds a document's virtual fields. As of right now Virtual implements getters and setters
+// for types most commonly used in web developement. It also implements a generic getter and setter
+// for storing and retrieving any type as type interface{} and must be asserted to its proper type upon retrieval.
+//
+// These fields that are kept for the lifetime of the document in memory and are NOT persisted to the database.
 type Virtual struct {
 	bools   map[string]bool
 	ints    map[string]int
@@ -26,11 +31,18 @@ func newVirtual() *Virtual {
 	return v
 }
 
+// Get returns the stored value with the given name as type interface{}.
+// It also returns a boolean value indicating whether it was found.
+//
+// Get is a generic getter for any arbitrary type
 func (v *Virtual) Get(name string) (interface{}, bool) {
 	val, ok := v.allElse[name]
 	return val, ok
 }
 
+// Set stores the value with the given name as type interface{}.
+//
+// Set is a generic setter for any arbitrary type
 func (v *Virtual) Set(name string, val interface{}) {
 	v.allElse[name] = val
 }

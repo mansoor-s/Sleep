@@ -54,7 +54,7 @@ func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 
 // CreateDoc conditions an instance of the model to become a document.
 //
-// See #Model.CreateDoc. They are the same
+// See Model.CreateDoc. They are the same
 func (z *Sleep) CreateDoc(doc interface{}) {
 	typ := reflect.TypeOf(doc).Elem()
 	structName := typ.Name()
@@ -83,7 +83,7 @@ func (z *Sleep) Model(name string) *Model {
 	return z.models[name]
 }
 
-// See Sleep.ObjectId
+// See ObjectId
 func (z *Sleep) ObjectId(id string) bson.ObjectId {
 	return ObjectId(id)
 }
