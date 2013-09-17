@@ -32,7 +32,7 @@ func newVirtual() *Virtual {
 }
 
 // Get returns the stored value with the given name as type interface{}.
-// It also returns a boolean value indicating whether it was found.
+// It also returns a boolean value indicating whether a value was found.
 //
 // Get is a generic getter for any arbitrary type
 func (v *Virtual) Get(name string) (interface{}, bool) {
@@ -47,47 +47,62 @@ func (v *Virtual) Set(name string, val interface{}) {
 	v.allElse[name] = val
 }
 
+// Get returns the stored boolean value with the given name.
+// It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetBool(name string) (bool, bool) {
 	val, ok := v.bools[name]
 	return val, ok
 }
 
+// SetBool stores the boolean value with the given name.
 func (v *Virtual) SetBool(name string, val bool) {
 	v.bools[name] = val
 }
 
+// GetInt returns the stored int value with the given name.
+// It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetInt(name string) (int, bool) {
 	val, ok := v.ints[name]
 	return val, ok
 }
 
+// SetBool stores the in value with the given name.
 func (v *Virtual) SetInt(name string, val int) {
 	v.ints[name] = val
 }
 
+// GetString returns the stored string value with the given name.
+// It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetString(name string) (string, bool) {
 	val, ok := v.strings[name]
 	return val, ok
 }
 
+// SetBool stores the string value with the given name.
 func (v *Virtual) SetString(name string, val string) {
 	v.strings[name] = val
 }
 
+// GetObjectId returns the stored bson.ObjectId value with the given name.
+// It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetObjectId(name string) (bson.ObjectId, bool) {
 	val, ok := v.ids[name]
 	return val, ok
 }
 
+// SetBool stores the bson.ObjectId value with the given name.
 func (v *Virtual) SetObjectId(name string, val bson.ObjectId) {
 	v.ids[name] = val
 }
 
+// GetTime returns the stored time.Time value with the given name.
+// It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetTime(name string) (time.Time, bool) {
 	val, ok := v.times[name]
 	return val, ok
 }
 
+// SetBool stores the time.Time value with the given name.
 func (v *Virtual) SetTime(name string, val time.Time) {
 	v.times[name] = val
 }
