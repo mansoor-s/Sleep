@@ -72,22 +72,42 @@ func (d *Document) Remove() error {
 
 //implement stand-in hooks here
 
+// PreSave is a stand-in method that can be implemented in the schema defination struct
+// to be called before the document is saved to the database.
+//
+// The method should have a reciever that is a pointer to the schema type
 func (m *Document) PreSave() {
 
 }
 
+// PostSave is a stand-in method that can be implemented in the schema defination struct
+// to be called after the document is saved to the database.
+//
+// The method should have a reciever that is a pointer to the schema type
 func (m *Document) PostSave() {
 
 }
 
+// PreRemove is a stand-in method that can be implemented in the schema defination struct
+// to be called before the document is removed from the database.
+//
+// The method should have a reciever that is a pointer to the schema type
 func (m *Document) PreRemove() {
 
 }
 
+// PostRemove is a stand-in method that can be implemented in the schema defination struct
+// to be called after the document is removed from the database.
+//
+// The method should have a reciever that is a pointer to the schema type
 func (m *Document) PostRemove() {
 
 }
 
+// OnCreate is a stand-in method that can be implemented in the schema defination struct
+// to be called when the document is created using Sleep.Modle.CreateDoc method.
+//
+// The method should have a reciever that is a pointer to the schema type
 func (m *Document) OnCreate() {
 
 }
