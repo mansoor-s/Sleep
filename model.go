@@ -6,7 +6,8 @@ import (
 )
 
 // Model struct represents a collection in MongoDB.
-// It inherits from mgo.Collection and overwrides some functions.
+// It inherits from mgo.Collection and overwrides the functions below to provide more
+// functionality and to create compatibility with Sleep.
 type Model struct {
 	*mgo.Collection
 	//C is the underlying mgo.collection value for this model.
@@ -56,14 +57,26 @@ func (m *Model) FindId(id interface{}) *Query {
 	return m.Find(bson.M{"_id": getObjectId(id)})
 }
 
+// RemoveId removes a document from the collection based on its _id field.
+// Same as mgo.Collection.RemoveId, except that it accepts the Id as a string or bson.ObjectId
+//
+// See http://godoc.org/labix.org/v2/mgo#Collection.RemoveId
 func (m *Model) RemoveId(id interface{}) error {
 	return m.C.RemoveId(getObjectId(id))
 }
 
+// UpdateId updates a document in the collection based on its _id field.
+// Same as mgo.Collection.UpdateId, except that it accepts the Id as a string or bson.ObjectId
+//
+// See http://godoc.org/labix.org/v2/mgo#Collection.UpdateId
 func (m *Model) UpdateId(id interface{}, change interface{}) error {
 	return m.C.UpdateId(getObjectId(id), change)
 }
 
+// UpsertId updates or inserts a document in the collection based on its _id field.
+// Same as mgo.Collection.UpsertId, except that it accepts the Id as a string or bson.ObjectId
+//
+// See http://godoc.org/labix.org/v2/mgo#Collection.UpsertId
 func (m *Model) UpsertId(id interface{}, change interface{}) (*mgo.ChangeInfo, error) {
 	return m.C.UpsertId(getObjectId(id), change)
 }
