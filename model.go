@@ -9,7 +9,9 @@ import (
 // It inherits from mgo.Collection and overwrides some functions.
 type Model struct {
 	*mgo.Collection
-	C *mgo.Collection // C is the underlying mgo.collection value for this model. Refer to http://godoc.org/labix.org/v2/mgo#Collection for full usage information
+	//C is the underlying mgo.collection value for this model.
+	//Refer to http://godoc.org/labix.org/v2/mgo#Collection for full usage information
+	C *mgo.Collection
 	z *Sleep
 }
 
