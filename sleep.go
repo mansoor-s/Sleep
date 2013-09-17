@@ -54,11 +54,7 @@ func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 
 // CreateDoc conditions an instance of the model to become a document.
 //
-// What it means in pratical terms is that Create sets a value for the schema's *Sleep.Document anonymous field. This will allow Sleep to work with the value as a document.
-// Calling this function is only necessary when wishing to create documents "manually".
-// It is not necessary to call this function on a value that will be holding the result of a query; Sleep will do that.
-//
-// After a document is created with this function, the document will expose all of the public methods and fields of the Sleep.Model struct as its own.
+// See Sleep.Model.CreateDoc. They are the same
 func (z *Sleep) CreateDoc(doc interface{}) {
 	typ := reflect.TypeOf(doc).Elem()
 	structName := typ.Name()
@@ -82,15 +78,22 @@ func (z *Sleep) C(model string) (*mgo.Collection, bool) {
 	return c, ok
 }
 
+// Model returns a pointer to the Model of the registered schema
 func (z *Sleep) Model(name string) *Model {
 	return z.models[name]
 }
 
-func (z *Sleep) ObjectId(id interface{}) *bson.ObjectId {
+// See Sleep.ObjectId
+func (z *Sleep) ObjectId(id string) bson.ObjectId {
 	return ObjectId(id)
 }
 
-func ObjectId(id interface{}) bson.ObjectId {
+// ObjectId converts a string hex representation of an ObjectId into type bson.ObjectId.
+func ObjectId(id string) bson.ObjectId {
+	return bson.ObjectIdHex(id)
+}
+
+func getObjectId(id interface{}) bson.ObjectId {
 	var idActual bson.ObjectId
 	switch id.(type) {
 	case string:
