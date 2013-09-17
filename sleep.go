@@ -86,6 +86,10 @@ func (z *Sleep) Model(name string) *Model {
 	return z.models[name]
 }
 
+func (z *Sleep) ObjectId(id interface{}) *bson.ObjectId {
+	return ObjectId(id)
+}
+
 func ObjectId(id interface{}) bson.ObjectId {
 	var idActual bson.ObjectId
 	switch id.(type) {
