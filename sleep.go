@@ -43,16 +43,22 @@ func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	z.documents[structName] = Document{C: z.Db.C(collectionName),
-		isQueried: true, schema: schema,
-		populated: make(map[string]interface{}), Found: true}
+	idField := reflect.ValueOf(schema).Elem().FieldByName("Id")
+	if !idField.IsValid() {
+		panic("Schema `" + structName + "` must have an `Id` field")
+	}
 
 	model := newModel(z.Db.C(collectionName), z)
 	z.models[structName] = model
+
+	z.documents[structName] = Document{C: z.Db.C(collectionName),
+		isQueried: true, schema: schema, Model: model
+		populated: make(map[string]interface{}), Found: true}
+
 	return model
 }
 
-// CreateDoc conditions an instance of the model to become a document.
+// CreateDoc conditions an instance of the model to become a document. Will create an ObjectId for the document.
 //
 // See Model.CreateDoc. They are the same
 func (z *Sleep) CreateDoc(doc interface{}) {
@@ -60,7 +66,10 @@ func (z *Sleep) CreateDoc(doc interface{}) {
 	structName := typ.Name()
 	document := z.documents[structName]
 
-	document.doc = doc
+	document.schema = doc
+	document.Model = z.models[structName]
+	document.Virtual = newVirtual()
+
 	val := reflect.ValueOf(doc).Elem()
 	docVal := val.FieldByName("Document")
 	docVal.Set(reflect.ValueOf(document))

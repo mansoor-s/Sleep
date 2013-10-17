@@ -13,6 +13,7 @@ import (
 type Virtual struct {
 	bools   map[string]bool
 	ints    map[string]int
+	floats  map[string]float64
 	strings map[string]string
 	allElse map[string]interface{}
 	ids     map[string]bson.ObjectId
@@ -66,8 +67,20 @@ func (v *Virtual) GetInt(name string) (int, bool) {
 	return val, ok
 }
 
-// SetBool stores the in value with the given name.
+// SetInt stores the int value with the given name.
 func (v *Virtual) SetInt(name string, val int) {
+	v.ints[name] = val
+}
+
+// GetFloat returns the stored float64 value with the given name.
+// It also returns a boolean value indicating whether a value was found.
+func (v *Virtual) GetFloat(name string) (int, bool) {
+	val, ok := v.ints[name]
+	return val, ok
+}
+
+// SetFloat stores the float64 value with the given name.
+func (v *Virtual) SetFloat(name string, val int) {
 	v.ints[name] = val
 }
 
@@ -78,7 +91,7 @@ func (v *Virtual) GetString(name string) (string, bool) {
 	return val, ok
 }
 
-// SetBool stores the string value with the given name.
+// SetString stores the string value with the given name.
 func (v *Virtual) SetString(name string, val string) {
 	v.strings[name] = val
 }
@@ -90,7 +103,7 @@ func (v *Virtual) GetObjectId(name string) (bson.ObjectId, bool) {
 	return val, ok
 }
 
-// SetBool stores the bson.ObjectId value with the given name.
+// SetObjectId stores the bson.ObjectId value with the given name.
 func (v *Virtual) SetObjectId(name string, val bson.ObjectId) {
 	v.ids[name] = val
 }
@@ -102,7 +115,7 @@ func (v *Virtual) GetTime(name string) (time.Time, bool) {
 	return val, ok
 }
 
-// SetBool stores the time.Time value with the given name.
+// SetTime stores the time.Time value with the given name.
 func (v *Virtual) SetTime(name string, val time.Time) {
 	v.times[name] = val
 }

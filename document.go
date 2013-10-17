@@ -7,33 +7,75 @@ import (
 )
 
 type Document struct {
-	C         *mgo.Collection
-	doc       interface{}
-	isQueried bool
-	populated map[string]interface{}
-	schema    interface{}
-	Found     bool
-	Virtual   *Virtual
+	C     *mgo.Collection
+	Model *Model
+	// a pointer to the schema
+	schema       interface{}
+	isQueried    bool
+	populated    map[string]interface{}
+	schemaStruct interface{}
+	Found        bool
+	Virtual      *Virtual
 }
 
 // Save uses MongoDB's upsert command to either update an existing document or insert it into the collection.
 // The document's schma MUST have an Id field.
 func (d *Document) Save() error {
-	idField := reflect.ValueOf(d.doc).Elem().FieldByName("Id")
-	if !idField.IsValid() {
-		panic("Document `" + reflect.TypeOf(d.doc).Elem().Name() + "` must have an `Id` field")
-	}
+	idField := reflect.ValueOf(d.schema).Elem().FieldByName("Id")
 
+	d.schema.PreSave()
 	id := idField.Interface()
-	_, err := d.C.UpsertId(id, d.doc)
+	_, err := d.C.UpsertId(id, d.schema)
+
+	if err != nil {
+		d.Found = true
+		d.schema.PostSave()
+	}
 	return err
 }
 
+// Use this method to check if this document is in fact populated with data from the database.
+// Sleep suppresses mgo's ErrNotFound error and instead provides this interface for checking if results were returned.
 func (d *Document) IsValid() bool {
 	return d.Found
 }
 
-// Field gives access to a populated field.
+func (d *Document) PopulateOne(field string, value interface{}) error {
+	dummyQuery := d.Model.Find(bson.M{}).Populate(field)
+	err := dummyQuery.populateExec(d.schema)
+	if err != nil {
+		return err
+	}
+	populatedField, ok := d.populated[field]
+	if ok {
+		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField).Elem().Interface())
+	}
+	return nil
+}
+
+func (d *Document) Populate(fields ...string) error {
+	dummyQuery := d.Model.Find(bson.M{}).Populate(fields)
+	err := dummyQuery.populateExec(d.schema)
+	return err
+}
+
+func (d *Document) PopulateQuery(path string, q *Query, value interface{}) error {
+	dummyQuery := d.Model.Find(bson.M{}).PopulateQuery(field, q)
+	err := dummyQuery.populateExec(d.schema)
+
+	if err != nil {
+		return err
+	}
+	populatedField, ok := d.populated[field]
+	if ok {
+		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField).Elem().Interface())
+	}
+	return nil
+}
+
+// Populated gives access to the document's populated fields. This method does NOT make a database query.
+// It returns only existing populated fields.
+//
 //
 // The path must be exactly the same as what was passed to Query.Populate() or Query.PopulateQuery() and is case sensitive.
 //
@@ -50,7 +92,7 @@ func (d *Document) IsValid() bool {
 // Then the argument must be of type:   *[]*Bar
 //
 //
-func (d *Document) Field(path string, result interface{}) bool {
+func (d *Document) Populated(path string, result interface{}) bool {
 	value, ok := d.populated[path]
 	if !ok {
 		return ok
@@ -59,13 +101,33 @@ func (d *Document) Field(path string, result interface{}) bool {
 	return ok
 }
 
+// Removes the document from the database
 func (d *Document) Remove() error {
-	id := reflect.ValueOf(d.doc).Elem().FieldByName("Id").Interface().(bson.ObjectId)
-	return d.C.Remove(bson.M{"_id": id})
+	d.schema.PreRemove()
+	id := reflect.ValueOf(d.schema).Elem().FieldByName("Id").Interface().(bson.ObjectId)
+	err := d.C.Remove(bson.M{"_id": id})
+	//if we want it gone and it's already gone, should we really freak out?
+	if err == mgo.ErrNotFound {
+		err = nil
+	}
+
+	if err != nil {
+		d.schema.PostRemove()
+	}
+	return err
 }
 
 //implement Apply function here
 // it takes care of applying changes/merging to the document from another document
+func (d *Document) Apply(update interface{}) error {
+	change := mgo.Change{
+		Update:    change,
+		Upsert:    true,
+		ReturnNew: true}
+
+	_, err := d.C.FindId(d.schema.Id).Apply(change, d.schema)
+	return err
+}
 
 // implement populate function here so that  a document is able to be populated
 // after the initial query for its value
@@ -105,9 +167,19 @@ func (m *Document) PostRemove() {
 }
 
 // OnCreate is a stand-in method that can be implemented in the schema defination struct
-// to be called when the document is created using Sleep.Modle.CreateDoc method.
+// to be called when the document is created using Sleep.Model.CreateDoc method.
+// Use `OnResult()` to be called then the document is queried from the database.
 //
 // The method should have a reciever that is a pointer to the schema type
 func (m *Document) OnCreate() {
+
+}
+
+// OnResult is a stand-in method that can be implemented in the schema defination struct
+// to be called when the document is created from the results out of the database.
+// Use `OnCreate()` to be called then the document is created using Sleep.Model.CreateDoc method
+//
+// The method should have a reciever that is a pointer to the schema type
+func (m *Document) OnResult() {
 
 }

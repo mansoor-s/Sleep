@@ -23,42 +23,45 @@ type Query struct {
 	parentStruct  interface{}
 	populateField interface{}
 	isSlice       bool
-	popModel      string
+	popSchema     string
 }
 
 func (q *Query) populateExec(parentStruct interface{}) error {
 	for key, val := range q.populate {
 		val.parentStruct = parentStruct
 		val.findPopulatePath(key)
-		model, ok := q.z.documents[val.popModel]
+		document, ok := q.z.documents[val.popSchema]
 		if !ok {
-			panic("Unable to find `" + val.popModel + "` model. Was it registered?")
+			panic("Unable to find `" + val.popSchema + "` schema. Was it registered?")
 		}
 
-		var schema interface{}
+		var schemaStruct interface{}
 		if val.isSlice {
 			ids := val.populateField.([]bson.ObjectId)
 			if len(ids) == 0 {
 				return nil
 			}
 
-			schemaType := reflect.PtrTo(reflect.TypeOf(model.schema))
+			schemaType := reflect.PtrTo(reflect.TypeOf(document.schemaStruct))
 			slicedType := reflect.SliceOf(schemaType)
-			schema = reflect.New(slicedType).Interface()
+			schemaStruct = reflect.New(slicedType).Interface()
 			val.query = M{"_id": M{"$in": ids}}
 
 		} else {
-			schema = &model.schema
+			schemaStruct = &document.schemaStruct
 			id := val.populateField.(bson.ObjectId)
 			val.query = M{"_id": id}
 		}
 
-		err := val.Exec(schema)
+		err := val.Exec(schemaStruct)
+		if err == mgo.ErrNotFound {
+			return nil
+		}
 		if err != nil {
-			panic(err)
+			return err
 		}
 		parentModel := reflect.ValueOf(val.parentStruct).Elem().FieldByName("Document").Interface().(Document)
-		parentModel.populated[key] = schema
+		parentModel.populated[key] = schemaStruct
 	}
 	return nil
 }
@@ -255,35 +258,40 @@ func (query *Query) Exec(result interface{}) error {
 		val := reflect.ValueOf(result).Elem()
 		elemCount := val.Len()
 		for i := 0; i < elemCount; i++ {
-			modelCpy := query.z.documents[structName]
+			documentCpy := query.z.documents[structName]
 			sliceElem := val.Index(i)
-			modelCpy.doc = sliceElem.Interface()
-			modelCpy.Virtual = newVirtual()
+			documentCpy.schema = sliceElem.Interface()
+			documentCpy.Virtual = newVirtual()
+			documentCpy.Model = query.z.models[structName]
 			modelElem := sliceElem.Elem().FieldByName("Document")
-			modelElem.Set(reflect.ValueOf(document))
+			modelElem.Set(reflect.ValueOf(documentCpy))
 		}
 		return err
 	}
 
 	err = q.One(result)
-	document.doc = result
+	document.schema = result
 	document.Virtual = newVirtual()
+	document.Model = query.z.models[structName]
 	val := reflect.ValueOf(result).Elem()
 	documentVal := val.FieldByName("Document")
 	documentVal.Set(reflect.ValueOf(document))
 
+	if err == mgo.ErrNotFound {
+		documentVal.Elem().FieldByName("Found").SetBool(false)
+		return nil
+	}
+
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			documentVal.Elem().FieldByName("Found").SetBool(false)
+			document.Found = false
 			return nil
 		} else {
 			return err
 		}
 	}
 
-	query.populateExec(result)
-
-	return nil
+	return query.populateExec(result)
 }
 
 // Select enables selecting which fields should be retrieved for the results found.
