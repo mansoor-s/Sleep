@@ -24,6 +24,7 @@ func newVirtual() *Virtual {
 	v := &Virtual{
 		bools:   make(map[string]bool),
 		ints:    make(map[string]int),
+		floats:  make(map[string]float64),
 		strings: make(map[string]string),
 		allElse: make(map[string]interface{}),
 		ids:     make(map[string]bson.ObjectId),
@@ -75,13 +76,13 @@ func (v *Virtual) SetInt(name string, val int) {
 // GetFloat returns the stored float64 value with the given name.
 // It also returns a boolean value indicating whether a value was found.
 func (v *Virtual) GetFloat(name string) (int, bool) {
-	val, ok := v.ints[name]
+	val, ok := v.floats[name]
 	return val, ok
 }
 
 // SetFloat stores the float64 value with the given name.
 func (v *Virtual) SetFloat(name string, val int) {
-	v.ints[name] = val
+	v.floats[name] = val
 }
 
 // GetString returns the stored string value with the given name.
