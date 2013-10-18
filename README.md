@@ -20,6 +20,9 @@ You don't. Though, it is nice to have one.. specially in the context of web appl
 
 * * *
 
+## API Docs
+In all of its glory: http://godoc.org/github.com/mansoor-s/Sleep
+
 ## Usage: 
 ### Note: This is a verbose example meant to show off features
 
@@ -29,16 +32,14 @@ Define your Model:
 package Models
 
 type User struct {
-	Sleep.Document 																//This is important! 
-																								//All models must have an annonomouse composition of Sleep.Document
-	Id 		bson.ObjectId 		`bson:"_id"`   	//Nothing diffrent from mgo here
+	Sleep.Document 	//This is important! All models must have an anonymous composition of Sleep.Document
+	Id 		bson.ObjectId 		`bson:"_id"`   	//Nothing different from mgo here
 	Email 		string
 	Password 	string
 	Friends 	[]bson.ObjectId 	`model:"User"`  //define relationship - other Users
 }
 
-//This is a hook implemented
-//To be called when the document is retrieved from the DB
+//This is an optional hook implemented to be called when the document is retrieved from the DB
 func (u *User) OnResult() {
 	u.Virtual.SetInt("totalFriends", len(u.Friends))
 }
@@ -71,7 +72,7 @@ func main() {
 	sleep := Sleep.New(session, "MY_DB_NAME")
 
 	//All models must be registered with Sleep
-	//It expects an instance of the schema and the collection name that it represents docuements in
+	//It expects an instance of the schema and the collection name that it represents documents in
 	// and returns a pointer to a Model representing the mongodb collection
 	User := sleep.Register(User{}, "MY_COLLECTION_NAME")
 
@@ -142,7 +143,7 @@ PostRemove()
 OnCreate()
 OnResult()
 ```
-Implement thse methods in your schema and they will be called when triggered.
+Implement these methods in your schema and they will be called when triggered.
 
 Look at the API docs for Sleep.Document for more info
 
