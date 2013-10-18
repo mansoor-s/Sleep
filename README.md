@@ -1,31 +1,29 @@
+# Sleep
 
-
-Sleep is an ODM (Object Document Model) for MongoDB written in Go. It is written on top of the mgo library.
+Sleep is an ODM (**O**bject **D**ocument **M**odel) for **MongoDB** written in Go. It is written on top of the **mgo** library.
 Sleep doesn't try to replace mgo, but rather simply augments it.
 
 Why do I we need an ODM?
-You don't. Though, it is nice to have one.. specially in the context of web applications. But only so long as it doesn't get in your way, and you can drop down the to the DB driver anytime.
+You don't. Though, it is nice to have one.. specially in the context of web applications. But only so long as it doesn't get in your way, and you can drop down the to the DB driver any time.
 
+## Features :
 
-Features (Look further down for more information on these features):
+*   **Populate** - MongoDB doesn't have JOINs, but we still want to query based on relationships. Sleep makes this task easy. Relationships are mapped via tags in the model definition. Sleep can run populate on a single ObjectId or a slice of them.
 
-Populate - MongoDB doesn't have JOINs, but we still want to query based on relationships. Sleep makes this task easy. Relationships are mapped via tags in the model defination. Sleep can run populate on a single ObjectId or a slice of them.
+*   **Hooks** - The hooks functionality allows you to register functions to be called before or after an action has taken place on the document. Ex: ```PreSave(), PreRemove()```. Use these to consolidate your business logic in one place. See bellow for a full list of supported hooks
 
-Hooks - The hooks functionality allows you to register functions to be called before or after an action has taken place on the document. Ex: PreSave(), PreRemove(). Use these to consolodate your business logic in one place. See bellow for a full list of supported hooks
+*   **Virtuals** - Store computed and temporary data along with your document. These values live only for the lifetime of the document, and are not persisted to the database.
 
-Virtuals - Store computed and temporary data along with your document. These values live only for the lifetime of the document, and are not persisted to the database.
+*   **Extends mgo.Collection** - Sleep extends mgo's Collection struct. Reimplements operations that take just a bson.ObjectId to also accept string, because often times we only have a string representation of the ObjectId and we can let sleep handle the conversion. Mgo's Query struct is replaced with one that understands the populate functions.
 
-Extends mgo.Collection - Sleep extends mgo's Collection struct. Reimplements operations that take just a bson.ObjectId to also accept string, because often times we only have a string representation of the ObjectId and we can let sleep handle the conversion. Mgo's Query struct is replaced with one that understands the populate functions.
+*   **Convenience methods** - All documents get methods such as `Save(), Remove(), Apply(), Populate(), PopulateQuery()`
 
-Convenience methods - All documents get methods such as Save(), Remove(), Apply(), Populate(), PopulateQuery()
+* * *
 
---------------------
-
-Usage:
-Note: This is a verbose example meant to show off features
+## Usage: 
+### Note: This is a verbose example meant to show off features
 
 Define your Model:
-//////////////////////////////////////////////////////////////////////////////////
 
 ```Go
 package Models
@@ -33,10 +31,10 @@ package Models
 type User struct {
 	Sleep.Document 																//This is important! 
 																								//All models must have an annonomouse composition of Sleep.Document
-	Id 				bson.ObjectId 		`bson:"_id"`   		//Nothing diffrent from mgo here
+	Id 		bson.ObjectId 		`bson:"_id"`   	//Nothing diffrent from mgo here
 	Email 		string
 	Password 	string
-	Friends 	[]bson.ObjectId 	`model:"User"`   //define relationship - other Users
+	Friends 	[]bson.ObjectId 	`model:"User"`  //define relationship - other Users
 }
 
 //This is a hook implemented
@@ -49,7 +47,7 @@ func (u *User) MySuperDuperMethod() {
 	//do cool stuff
 }
 ```
-////////////////////////////////////////////////////////////////////////////////////
+Implementation:
 
 ```Go
 package main
