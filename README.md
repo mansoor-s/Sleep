@@ -1,6 +1,6 @@
 # Sleep
 
-Sleep is an ODM (**O**bject **D**ocument **M**odel) for **MongoDB** written in Go. It is written on top of the **mgo** library.
+Sleep is an ODM (**O**bject **D**ocument **M**apper) for **MongoDB** written in Go. It is written on top of the **mgo** library.
 Sleep doesn't try to replace mgo, but rather simply augments it.
 
 Why do I we need an ODM?
