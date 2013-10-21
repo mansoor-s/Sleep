@@ -11,7 +11,7 @@ You don't. Though, it is nice to have.. specially in the context of a web applic
 
 ## Features :
 
-*   **Populate** - MongoDB doesn't have JOINs, but we still want to query based on relationships. Sleep makes this task easy. Relationships are mapped via tags in the model definition. Sleep can run populate on a single ObjectId or a slice of them.
+*   **Populate** - MongoDB doesn't have JOINs, but we still want to query based on relationships. Sleep makes this task easy. Relationships are mapped via tags in the model definition. Sleep can run populate on a single ObjectId or a slice of them. And it can even run queries on these relationships! For example, lets say you have a social networking site and a user has 200 friends, you can run a query on those friends to only return the friends that are older than 30, sort them by their ages, and limit it to 5 results
 
 *   **Hooks** - The hooks functionality allows you to register functions to be called before or after an action has taken place on the document. Ex: ```PreSave(), PreRemove()```. Use these to consolidate your business logic in one place. See bellow for a full list of supported hooks
 
@@ -122,9 +122,9 @@ func main() {
 	//Using Populate on an existing document ... say one that you queried from the DB earlier
 	//////////////////
 	//This example will also show the PopulateQuery method, which allows you to further filter and sort your relationships! 
-	popQuery := User.Find(bson.M{})
-	myDoc.Populate
-
+	friends := []*User{}
+	popQuery := User.Find(bson.M{"age": bson.M{"$gt": 30}}).Sort("age").Limit(5)
+	err := myDoc.PopulateQuery(popQuery, friends)
 
 
 	//The model inherits from the mgo.C struct that it represents. For instance, even though Sleep.Model does not implement
