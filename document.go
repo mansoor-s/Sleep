@@ -40,6 +40,15 @@ func (d *Document) IsValid() bool {
 	return d.Found
 }
 
+//Same as Query.Populate() except it can be called on an existing document.
+func (d *Document) Populate(fields ...string) error {
+	dummyQuery := d.Model.Find(bson.M{}).Populate(fields...)
+	err := dummyQuery.populateExec(d.schema)
+	return err
+}
+
+//Same as populate but used to populate only a single field. Its last parameter is a pointer
+//to the variable to hold the value of the result
 func (d *Document) PopulateOne(field string, value interface{}) error {
 	dummyQuery := d.Model.Find(bson.M{}).Populate(field)
 	err := dummyQuery.populateExec(d.schema)
@@ -53,12 +62,8 @@ func (d *Document) PopulateOne(field string, value interface{}) error {
 	return nil
 }
 
-func (d *Document) Populate(fields ...string) error {
-	dummyQuery := d.Model.Find(bson.M{}).Populate(fields...)
-	err := dummyQuery.populateExec(d.schema)
-	return err
-}
-
+//Same as Query.PopulateQuery() except the last parameter is a pointer to the variable to hold
+//the value of the result.
 func (d *Document) PopulateQuery(path string, q *Query, value interface{}) error {
 	dummyQuery := d.Model.Find(bson.M{}).PopulateQuery(path, q)
 	err := dummyQuery.populateExec(d.schema)

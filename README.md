@@ -24,6 +24,7 @@ You don't. Though, it is nice to have one.. specially in the context of web appl
 * * *
 
 ## API Docs
+The docs include lots of detailed explainations and examples:
 In all of its glory: http://godoc.org/github.com/mansoor-s/Sleep
 
 ## Usage: 

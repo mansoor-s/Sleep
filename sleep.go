@@ -42,6 +42,9 @@ func (z *Sleep) SetModelTag(key string) {
 func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
+	if typ.Kind() == reflect.Ptr {
+		panic("Expected value, got a pointer")
+	}
 
 	idField := reflect.ValueOf(schema).FieldByName("Id")
 	if !idField.IsValid() {
@@ -102,6 +105,9 @@ func ObjectId(id string) bson.ObjectId {
 	return bson.ObjectIdHex(id)
 }
 
+//Function will take types string or bson.ObjectId represented by a type interface{} and returns
+//a type bson.ObjectId. Will panic if wrong type is passed. Will also panic if the string
+//is not a valid representation of an ObjectId
 func getObjectId(id interface{}) bson.ObjectId {
 	var idActual bson.ObjectId
 	switch id.(type) {
