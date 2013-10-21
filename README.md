@@ -40,7 +40,7 @@ Define your Model:
 package Models
 
 type User struct {
-	Sleep.Document 	//This is important! All models must have an anonymous composition of Sleep.Document 	`bson:"-"`
+	Sleep.Document 	`bson:"-"` //This is important! All models must have an anonymous composition of Sleep.Document 	
 	Id 		 	bson.ObjectId 		`bson:"_id"`   	//Nothing different from mgo here
 	Email 		string
 	Password 	string
