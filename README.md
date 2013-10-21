@@ -31,7 +31,8 @@ In all of its glory: http://godoc.org/github.com/mansoor-s/Sleep
 
 
 ## Usage: 
-### Note: This is a verbose example meant to show off features
+### Note:
+Sleep suppresses mgo's ErrNotFound error and instead provides the method IsValid() on every document. It returns true if the document was found, otherwise returns false
 
 Define your Model:
 
@@ -92,8 +93,14 @@ func main() {
 	//We can pass in both types "string" and "bson.ObjectId"
 	err = sleep.FindId("5232171fc081671e81000001").Exec(user)
 	if err != nil {
-		panic(err)
+		//do stuff
 	}
+
+	if !user.IsValid() {
+		//user not found!
+	}
+
+
 
 	// We can also explictly call Find on the model pointer that we got back from Sleep.Register()
 	// Also showing how to handle multiple results
