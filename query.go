@@ -81,6 +81,7 @@ func (q *Query) populateExec(parentStruct interface{}) error {
 //	}
 //
 //	type Person struct {
+// 		Sleep.Document `bson:"-"`
 //		Name           string
 //		PhoneNumber    string
 //		Friend         bson.ObjectId    `model:"Person"`

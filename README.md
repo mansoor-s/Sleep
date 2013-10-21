@@ -7,7 +7,7 @@ Sleep doesn't try to replace mgo, but rather simply augments it.
 
 
 ####Why do I we need an ODM?
-You don't. Though, it is nice to have one.. specially in the context of web applications. But only so long as it doesn't get in your way, and you can drop down the to the DB driver any time.
+You don't. Though, it is nice to have.. specially in the context of a web application. It allows you to couple your business logic with your data. But it is only useful as long as it doesn't get in your way, and you can drop down the to the DB driver any time.
 
 ## Features :
 
@@ -25,7 +25,10 @@ You don't. Though, it is nice to have one.. specially in the context of web appl
 
 ## API Docs
 The docs include lots of detailed explainations and examples:
+
 In all of its glory: http://godoc.org/github.com/mansoor-s/Sleep
+
+
 
 ## Usage: 
 ### Note: This is a verbose example meant to show off features
@@ -36,8 +39,8 @@ Define your Model:
 package Models
 
 type User struct {
-	Sleep.Document 	//This is important! All models must have an anonymous composition of Sleep.Document
-	Id 		bson.ObjectId 		`bson:"_id"`   	//Nothing different from mgo here
+	Sleep.Document 	//This is important! All models must have an anonymous composition of Sleep.Document 	`bson:"-"`
+	Id 		 	bson.ObjectId 		`bson:"_id"`   	//Nothing different from mgo here
 	Email 		string
 	Password 	string
 	Friends 	[]bson.ObjectId 	`model:"User"`  //define relationship - other Users
@@ -133,8 +136,6 @@ func main() {
 
 }
 ```
-
-///////////////////////////////////////////////////////////////////////////////////
 
 ----------------------
 

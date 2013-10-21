@@ -5,11 +5,12 @@ import (
 	"time"
 )
 
-// Virtual holds a document's virtual fields. As of right now Virtual implements getters and setters
-// for types most commonly used in web developement. It also implements a generic getter and setter
-// for storing and retrieving any type as type interface{} and must be asserted to its proper type upon retrieval.
+//Virtual holds temporary/computed values related to the document.
+//As of right now Virtual implements getters and setters
+//for types most commonly used in web developement. It also implements a generic getter and setter
+//for storing and retrieving any type as type interface{} and must be asserted to its proper type upon retrieval.
 //
-// These fields that are kept for the lifetime of the document in memory and are NOT persisted to the database.
+//These fields that are kept for the lifetime of the document in memory and are NOT persisted to the database.
 type Virtual struct {
 	bools   map[string]bool
 	ints    map[string]int
