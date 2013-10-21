@@ -147,7 +147,7 @@ func (d *Document) Apply(update interface{}) error {
 // to be called before the document is saved to the database.
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) PreSave() {
+func (d *Document) PreSave() {
 
 }
 
@@ -155,7 +155,7 @@ func (m *Document) PreSave() {
 // to be called after the document is saved to the database.
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) PostSave() {
+func (d *Document) PostSave() {
 
 }
 
@@ -163,7 +163,7 @@ func (m *Document) PostSave() {
 // to be called before the document is removed from the database.
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) PreRemove() {
+func (d *Document) PreRemove() {
 
 }
 
@@ -171,7 +171,7 @@ func (m *Document) PreRemove() {
 // to be called after the document is removed from the database.
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) PostRemove() {
+func (d *Document) PostRemove() {
 
 }
 
@@ -180,7 +180,7 @@ func (m *Document) PostRemove() {
 // Use `OnResult()` to be called then the document is queried from the database.
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) OnCreate() {
+func (d *Document) OnCreate() {
 
 }
 
@@ -189,6 +189,6 @@ func (m *Document) OnCreate() {
 // Use `OnCreate()` to be called then the document is created using Sleep.Model.CreateDoc method
 //
 // The method should have a reciever that is a pointer to the schema type
-func (m *Document) OnResult() {
+func (d *Document) OnResult() {
 
 }
