@@ -129,17 +129,19 @@ func main() {
 
 	//The model inherits from the mgo.C struct that it represents. For instance, even though Sleep.Model does not implement
 	// an EnsureIndex() method, when called, the underlying mgo.C.EnsureIndex() method is called.
-	User.C.EnsureIndex(.....)
+	User.EnsureIndex(.....)
 	//or
-	User.C.UpdateAll(.....)
-
-
+	User.UpdateAll(.....)
+	//or
+	User.Count()
 }
 ```
 
-----------------------
 
-Hooks (Hooks are optional):
+--------------------------
+
+
+###Hooks (Hooks are optional):
 ```Go
 PreSave()
 PostSave()
@@ -152,3 +154,26 @@ Implement these methods in your schema and they will be called when triggered.
 
 Look at the API docs for Sleep.Document for more info
 
+
+
+###Virtuals
+Example Usage:
+
+```Go
+	//get the document from DB...
+	
+	//Setting virtuals:
+	myDoc.Virtual.SetString("stringVal", "ABCDEF")
+
+	//Store an arbitrary type:
+	//myIds := []bson.ObjectId{...........}
+	myDoc.Virtual.Set("myIds", myIds)
+
+	//Getting arbitrary typed values
+	idsInterface, ok := myDoc.Virtual.Get("myIds")
+	if !ok {
+		//handle not found here
+	}
+	//cast it back to the type we want
+	myIds := idsInterface.([]bson.ObjectId)
+```
