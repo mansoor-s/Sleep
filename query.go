@@ -278,7 +278,7 @@ func (query *Query) Exec(result interface{}) error {
 	documentVal.Set(reflect.ValueOf(document))
 
 	if err == mgo.ErrNotFound {
-		documentVal.Elem().FieldByName("Found").SetBool(false)
+		documentVal.FieldByName("Found").SetBool(false)
 		return nil
 	}
 

@@ -52,7 +52,7 @@ func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 	z.models[structName] = model
 
 	z.documents[structName] = Document{C: z.Db.C(collectionName),
-		isQueried: true, schema: schema, Model: model,
+		isQueried: true, schemaStruct: schema, Model: model,
 		populated: make(map[string]interface{}), Found: true}
 
 	return model

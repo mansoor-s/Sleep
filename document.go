@@ -10,9 +10,10 @@ type Document struct {
 	C     *mgo.Collection
 	Model *Model
 	// a pointer to the schema
-	schema       interface{}
-	isQueried    bool
-	populated    map[string]interface{}
+	schema    interface{}
+	isQueried bool
+	populated map[string]interface{}
+	//an instance of the schema that this document represents
 	schemaStruct interface{}
 	Found        bool
 	Virtual      *Virtual
@@ -95,6 +96,9 @@ func (d *Document) Populated(path string, result interface{}) bool {
 	value, ok := d.populated[path]
 	if !ok {
 		return ok
+	}
+	if reflect.ValueOf(result).Type().Kind() != reflect.Ptr {
+		panic("Expected a pointer, got a value")
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(value).Elem())
 	return ok
