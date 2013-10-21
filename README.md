@@ -160,20 +160,20 @@ Look at the API docs for Sleep.Document for more info
 Example Usage:
 
 ```Go
-	//get the document from DB...
-	
-	//Setting virtuals:
-	myDoc.Virtual.SetString("stringVal", "ABCDEF")
+//get the document from DB here..
 
-	//Store an arbitrary type:
-	//myIds := []bson.ObjectId{...........}
-	myDoc.Virtual.Set("myIds", myIds)
+//Setting virtuals:
+myDoc.Virtual.SetString("stringVal", "ABCDEF")
 
-	//Getting arbitrary typed values
-	idsInterface, ok := myDoc.Virtual.Get("myIds")
-	if !ok {
-		//handle not found here
-	}
-	//cast it back to the type we want
-	myIds := idsInterface.([]bson.ObjectId)
+//Store an arbitrary type:
+//myIds := []bson.ObjectId{...........}
+myDoc.Virtual.Set("myIds", myIds)
+
+//Getting arbitrary typed values
+idsInterface, ok := myDoc.Virtual.Get("myIds")
+if !ok {
+	//handle not found here
+}
+//assert it back to the type we want
+myIds := idsInterface.([]bson.ObjectId)
 ```
