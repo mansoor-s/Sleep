@@ -138,10 +138,10 @@ func (q *Query) findPopulatePath(path string) {
 		if i == 0 {
 			refVal = resultVal.FieldByName(elem)
 			structTag, _ := resultVal.Type().FieldByName(elem)
-			q.popModel = structTag.Tag.Get(q.z.modelTag)
+			q.popSchema = structTag.Tag.Get(q.z.modelTag)
 		} else if i == partsLen-1 {
 			structTag, _ := refVal.Type().FieldByName(elem)
-			q.popModel = structTag.Tag.Get(q.z.modelTag)
+			q.popSchema = structTag.Tag.Get(q.z.modelTag)
 			refVal = refVal.FieldByName(elem)
 		} else {
 			//refVal = handleSlice(refVal, elem, path)

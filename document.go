@@ -22,14 +22,13 @@ type Document struct {
 // The document's schma MUST have an Id field.
 func (d *Document) Save() error {
 	idField := reflect.ValueOf(d.schema).Elem().FieldByName("Id")
-
-	d.schema.PreSave()
+	reflect.ValueOf(d.schema).MethodByName("PreSave").Call([]reflect.Value{})
 	id := idField.Interface()
 	_, err := d.C.UpsertId(id, d.schema)
 
 	if err != nil {
 		d.Found = true
-		d.schema.PostSave()
+		reflect.ValueOf(d.schema).MethodByName("PostSave").Call([]reflect.Value{})
 	}
 	return err
 }
@@ -48,27 +47,27 @@ func (d *Document) PopulateOne(field string, value interface{}) error {
 	}
 	populatedField, ok := d.populated[field]
 	if ok {
-		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField).Elem().Interface())
+		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField))
 	}
 	return nil
 }
 
 func (d *Document) Populate(fields ...string) error {
-	dummyQuery := d.Model.Find(bson.M{}).Populate(fields)
+	dummyQuery := d.Model.Find(bson.M{}).Populate(fields...)
 	err := dummyQuery.populateExec(d.schema)
 	return err
 }
 
 func (d *Document) PopulateQuery(path string, q *Query, value interface{}) error {
-	dummyQuery := d.Model.Find(bson.M{}).PopulateQuery(field, q)
+	dummyQuery := d.Model.Find(bson.M{}).PopulateQuery(path, q)
 	err := dummyQuery.populateExec(d.schema)
 
 	if err != nil {
 		return err
 	}
-	populatedField, ok := d.populated[field]
+	populatedField, ok := d.populated[path]
 	if ok {
-		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField).Elem().Interface())
+		reflect.ValueOf(value).Elem().Set(reflect.ValueOf(populatedField))
 	}
 	return nil
 }
@@ -103,7 +102,7 @@ func (d *Document) Populated(path string, result interface{}) bool {
 
 // Removes the document from the database
 func (d *Document) Remove() error {
-	d.schema.PreRemove()
+	reflect.ValueOf(d.schema).MethodByName("PreRemove").Call([]reflect.Value{})
 	id := reflect.ValueOf(d.schema).Elem().FieldByName("Id").Interface().(bson.ObjectId)
 	err := d.C.Remove(bson.M{"_id": id})
 	//if we want it gone and it's already gone, should we really freak out?
@@ -112,7 +111,7 @@ func (d *Document) Remove() error {
 	}
 
 	if err != nil {
-		d.schema.PostRemove()
+		reflect.ValueOf(d.schema).MethodByName("PostRemove").Call([]reflect.Value{})
 	}
 	return err
 }
@@ -121,11 +120,12 @@ func (d *Document) Remove() error {
 // it takes care of applying changes/merging to the document from another document
 func (d *Document) Apply(update interface{}) error {
 	change := mgo.Change{
-		Update:    change,
+		Update:    update,
 		Upsert:    true,
 		ReturnNew: true}
 
-	_, err := d.C.FindId(d.schema.Id).Apply(change, d.schema)
+	id := reflect.ValueOf(d.schema).Elem().FieldByName("Id").Interface().(bson.ObjectId)
+	_, err := d.C.FindId(id).Apply(change, d.schema)
 	return err
 }
 

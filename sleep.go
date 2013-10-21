@@ -43,7 +43,7 @@ func (z *Sleep) Register(schema interface{}, collectionName string) *Model {
 	typ := reflect.TypeOf(schema)
 	structName := typ.Name()
 
-	idField := reflect.ValueOf(schema).Elem().FieldByName("Id")
+	idField := reflect.ValueOf(schema).FieldByName("Id")
 	if !idField.IsValid() {
 		panic("Schema `" + structName + "` must have an `Id` field")
 	}

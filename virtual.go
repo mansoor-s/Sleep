@@ -75,13 +75,13 @@ func (v *Virtual) SetInt(name string, val int) {
 
 // GetFloat returns the stored float64 value with the given name.
 // It also returns a boolean value indicating whether a value was found.
-func (v *Virtual) GetFloat(name string) (int, bool) {
+func (v *Virtual) GetFloat(name string) (float64, bool) {
 	val, ok := v.floats[name]
 	return val, ok
 }
 
 // SetFloat stores the float64 value with the given name.
-func (v *Virtual) SetFloat(name string, val int) {
+func (v *Virtual) SetFloat(name string, val float64) {
 	v.floats[name] = val
 }
 
